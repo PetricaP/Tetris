@@ -31,4 +31,8 @@ void set_texture_source(const char *redTexturePath,
                         const char *greenTexturePath,
                         const char *yellowTexturePath);
 
+bool is_colliding_piece_blocks_left(const Block *block);
+bool is_colliding_piece_blocks_right(const Block *block);
+bool is_colliding_piece_blocks_bottom(const Block *block);
+
 #endif

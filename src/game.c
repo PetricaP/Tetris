@@ -8,11 +8,39 @@
 #include <stdlib.h>
 #include <time.h>
 
+#define MAX_BLOCKS 40
+
 static unsigned int m_BlockWidth;
 static unsigned int m_Rows = 0;
 static unsigned int m_Cols = 0;
-
 static Piece m_ActivePiece;
+static Block m_Blocks[MAX_BLOCKS][MAX_BLOCKS / 2] = {{{{0, 0, 0, 0}, NULL}}};
+
+const Block *get_blocks(unsigned int i, unsigned int j) {
+    return &m_Blocks[i][j];
+}
+
+void draw_blocks(void) {
+    unsigned int i, j;
+    for (i = get_rows(); i > 0; --i) {
+        for (j = 0; j < get_cols(); ++j) {
+            Block block = m_Blocks[i][j];
+            if (block.m_Texture != NULL) {
+                draw_block(&block);
+            }
+        }
+    }
+}
+
+void add_piece(Piece *piece) {
+    int i = 0;
+    for (; i < 4; ++i) {
+        Block block = piece->blocks[i];
+        int col = block.rect.x / block.rect.w;
+        int row = block.rect.y / block.rect.h - 1;
+        memcpy(&m_Blocks[row][col], &block, sizeof(Block));
+    }
+}
 
 unsigned int get_cols(void) {
     return m_Cols;
@@ -23,17 +51,20 @@ unsigned int get_rows(void) {
 }
 
 void init_graphics(void) {
+    /* Initialize SDL */
     SDL_Init(SDL_INIT_VIDEO);
     IMG_Init(IMG_INIT_PNG);
 }
 
 void init_game(unsigned int blockWidth) {
+    /* Initialzie random number generator */
     srand(time(NULL));
     struct timespec ts;
     if (timespec_get(&ts, TIME_UTC) == 0) {
         fprintf(stderr, "Error while getting time");
     }
-    srandom(ts.tv_nsec ^ ts.tv_sec);  /* Seed the PRNG */
+    srandom((unsigned)ts.tv_nsec ^ (unsigned)ts.tv_sec);  /* Seed the PRNG */
+
     m_BlockWidth = blockWidth;
     m_ActivePiece = create_piece(random() % 6, 225, -75, m_BlockWidth, random() % 4);
     m_Rows = get_screen_height() / m_BlockWidth;
@@ -41,6 +72,7 @@ void init_game(unsigned int blockWidth) {
 }
 
 void close_game() {
+    /* Deinitialize SDL */
     IMG_Quit();
     SDL_Quit();
 }
@@ -79,7 +111,7 @@ void process_input(GameState * const gameState) {
         *gameState = PLAY;
     }
     if (is_key_pressed(SDLK_ESCAPE)) {
-        *gameState = EXIT;
+        *gameState = PLAY;
     }
 }
 
@@ -106,3 +138,4 @@ void draw_game() {
 void update_game() {
     update_piece(&m_ActivePiece);
 }
+

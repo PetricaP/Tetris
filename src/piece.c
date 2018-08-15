@@ -13,6 +13,130 @@
 
 static SDL_Texture *m_Textures[4] = { NULL };
 
+static void initialize_blocks(Piece *piece);
+static void player_change_speed(Piece piece, int *xSpeedP, 
+        unsigned int *yTimeStepP);
+static bool is_colliding_piece_right(const Piece *piece, int border);
+static bool is_colliding_piece_bottom(const Piece *piece, int border);
+static bool is_colliding_piece_left(const Piece *piece, int border);
+static void initialize_blocks_center(Piece *piece);
+static void initialize_blocks_bed(Piece *piece);
+static void initialize_blocks_lbed(Piece *piece);
+static void initialize_blocks_rbed(Piece *piece);
+static void initialize_blocks_lchair(Piece *piece);
+static void initialize_blocks_rchair(Piece *piece);
+static void initialize_blocks_pillar(Piece *piece);
+static void initialize_blocks_table(Piece *piece);
+
+Piece create_piece(PieceType type, int x, int y, unsigned int blockWidth,
+        BlockColor color) {
+    Piece piece;
+
+    piece.x = x;
+    piece.y = y;
+    piece.blockWidth = blockWidth;
+    piece.color = color;
+    piece.type = type;
+    piece.m_BlockTexture = m_Textures[color];
+    initialize_blocks(&piece);
+
+    return piece;
+}
+
+void update_piece(Piece *piece) {
+    static unsigned int xPrevTicks = 0;
+    static unsigned int yPrevTicks = 0;
+    unsigned int yTimeStep = BIG_Y_TIME_STEP;
+    const unsigned int xTimeStep = X_TIME_STEP;
+    int xSpeed = 0;
+    player_change_speed(*piece, &xSpeed, &yTimeStep);
+    unsigned int ticks = SDL_GetTicks();
+    if ((int)ticks - xPrevTicks > xTimeStep) {
+        int i = 0;
+        for (; i < 4; ++i) {
+            piece->blocks[i].rect.x += xSpeed * piece->blockWidth;
+        }
+        if ((int)ticks - yPrevTicks > yTimeStep) {
+            bool hit_ground = false;
+            for (i = 0; i < 4; ++i) {
+                piece->blocks[i].rect.y += piece->blockWidth;
+            }
+            for (i = 0; i < 4; ++i) {
+                if (is_colliding_piece_bottom(piece, get_screen_height())) {
+                    hit_ground = true;
+                    break;
+                }
+            }
+            if (hit_ground) {
+                for (i = 0; i < 4; ++i) {
+                    piece->blocks[i].rect.y -= piece->blockWidth;
+                }
+                add_piece(piece);
+                *piece = create_piece(random() % 6, piece->x,
+                        -2 * piece->blockWidth + piece->blockWidth / 2,
+                        piece->blockWidth, random() % 4);
+            }
+            yPrevTicks = ticks;
+        }
+        xPrevTicks = ticks;
+    }
+}
+
+static void player_change_speed(Piece piece, int *xSpeedP, 
+        unsigned int *yTimeStepP) {
+    if (is_key_pressed(SDLK_LEFT)) {
+        int i;
+        piece.x -= piece.blockWidth;
+        for (i = 0; i < 4; ++i) {
+            piece.blocks[i].rect.x -= piece.blockWidth;
+        }
+        if (!is_colliding_piece_left(&piece, 0)) {
+            *xSpeedP = -1;
+        }
+    }
+    if(is_key_pressed(SDLK_RIGHT)) {
+        int i;
+        piece.x += piece.blockWidth;
+        for (i = 0; i < 4; ++i) {
+            piece.blocks[i].rect.x += piece.blockWidth;
+        }
+        if(!is_colliding_piece_right(&piece, get_screen_width())) {
+            *xSpeedP = 1;
+        }
+    }
+    if(is_key_pressed(SDLK_DOWN)) {
+        *yTimeStepP = SMALL_Y_TIME_STEP;
+    }
+}
+
+static void initialize_blocks(Piece *piece) {
+    switch (piece->type) {
+        case LBED:
+            initialize_blocks_lbed(piece);
+            break;
+
+        case RBED:
+            initialize_blocks_rbed(piece);
+            break;
+
+        case TABLE:
+            initialize_blocks_table(piece);
+            break;
+
+        case LCHAIR:
+            initialize_blocks_lchair(piece);
+            break;
+
+        case RCHAIR:
+            initialize_blocks_rchair(piece);
+            break;
+
+        case PILLAR:
+            initialize_blocks_pillar(piece);
+            break;
+    }
+}
+
 /*  000  */
 /*  010  */
 /*  000  */
@@ -143,49 +267,6 @@ static void initialize_blocks_pillar(Piece *piece) {
                                     piece->blockWidth);
 }
 
-static void initialize_blocks(Piece *piece) {
-    switch (piece->type) {
-        case LBED:
-            initialize_blocks_lbed(piece);
-            break;
-
-        case RBED:
-            initialize_blocks_rbed(piece);
-            break;
-
-        case TABLE:
-            initialize_blocks_table(piece);
-            break;
-
-        case LCHAIR:
-            initialize_blocks_lchair(piece);
-            break;
-
-        case RCHAIR:
-            initialize_blocks_rchair(piece);
-            break;
-
-        case PILLAR:
-            initialize_blocks_pillar(piece);
-            break;
-    }
-}
-
-Piece create_piece(PieceType type, int x, int y, unsigned int blockWidth,
-        BlockColor color) {
-    Piece piece;
-
-    piece.x = x;
-    piece.y = y;
-    piece.blockWidth = blockWidth;
-    piece.color = color;
-    piece.type = type;
-    piece.m_BlockTexture = m_Textures[color];
-    initialize_blocks(&piece);
-
-    return piece;
-}
-
 void set_texture_source(const char *redTexturePath, 
                         const char *blueTexturePath,
                         const char *greenTexturePath,
@@ -226,7 +307,7 @@ void draw_piece(const Piece *piece) {
 static bool is_colliding_piece_right(const Piece *piece, int border) {
     int i = 0;
     for (; i < 4; ++i) {
-        if(piece->blocks[i].rect.x + (int)piece->blocks[i].rect.w >= border ||
+        if(piece->blocks[i].rect.x + (int)piece->blocks[i].rect.w > border ||
             is_colliding_piece_blocks_right(&piece->blocks[i])) {
             return true;
         }
@@ -237,7 +318,7 @@ static bool is_colliding_piece_right(const Piece *piece, int border) {
 static bool is_colliding_piece_left(const Piece *piece, int border) {
     int i = 0;
     for (; i < 4; ++i) {
-        if (piece->blocks[i].rect.x <= border ||
+        if (piece->blocks[i].rect.x < border ||
             is_colliding_piece_blocks_left(&piece->blocks[i])) {
             return true;
         }
@@ -248,7 +329,7 @@ static bool is_colliding_piece_left(const Piece *piece, int border) {
 static bool is_colliding_piece_bottom(const Piece *piece, int border) {
     int i;
     for (i = 0; i < 4; ++i) {
-        if (piece->blocks[i].rect.y + (int)piece->blockWidth >= border ||
+        if (piece->blocks[i].rect.y + (int)piece->blockWidth > border ||
             is_colliding_piece_blocks_bottom(&piece->blocks[i])) {
             return true;
         }
@@ -256,47 +337,53 @@ static bool is_colliding_piece_bottom(const Piece *piece, int border) {
     return false;
 }
 
-static void player_change_speed(Piece *piece, int *xSpeedP, 
-        unsigned int *yTimeStepP) {
-    if (is_key_pressed(SDLK_LEFT) && !is_colliding_piece_left(piece, 0)) {
-        *xSpeedP = -1;
-    } else if(is_key_pressed(SDLK_RIGHT) && 
-              !is_colliding_piece_right(piece, get_screen_width())) {
-        *xSpeedP = 1;
-    } else if(is_key_pressed(SDLK_DOWN)) {
-        *yTimeStepP = SMALL_Y_TIME_STEP;
+bool is_colliding_piece_blocks_left(const Block *block) {
+    unsigned int i, j;
+    unsigned int cols = get_cols();
+    unsigned int rows = get_rows();
+    for (i = 0; i < rows; ++i) {
+        for (j = 0; j < cols; ++j) {
+            const Block *block2 = get_blocks(i, j);
+            if (check_box_collision(&block->rect, &block2->rect)
+                && block2->rect.x + (int)block2->rect.w >= block->rect.x) {
+                return true;
+            }
+        }
     }
+    return false;
 }
 
-void update_piece(Piece *piece) {
-    static unsigned int xPrevTicks = 0;
-    static unsigned int yPrevTicks = 0;
-    unsigned int yTimeStep = BIG_Y_TIME_STEP;
-    const unsigned int xTimeStep = X_TIME_STEP;
-    int xSpeed = 0;
-    player_change_speed(piece, &xSpeed, &yTimeStep);
-    unsigned int ticks = SDL_GetTicks();
-    if ((int)ticks - xPrevTicks > xTimeStep) {
-        int i = 0;
-        for (; i < 4; ++i) {
-            piece->blocks[i].rect.x += xSpeed * piece->blockWidth;
-        }
-        if ((int)ticks - yPrevTicks > yTimeStep) {
-            bool hit_ground = false;
-            for (i = 0; i < 4; ++i) {
-                piece->blocks[i].rect.y += piece->blockWidth;
-                if (is_colliding_piece_bottom(piece, get_screen_height())) {
-                    hit_ground = true;
-                }
+bool is_colliding_piece_blocks_right(const Block *block) {
+    unsigned int i, j;
+    unsigned int cols = get_cols();
+    unsigned int rows = get_rows();
+    for (i = 0; i < rows; ++i) {
+        for (j = 0; j < cols; ++j) {
+            const Block *block2 = get_blocks(i, j);
+            if (check_box_collision(&block->rect, &block2->rect)
+                && block->rect.x + (int)block->rect.w >= block2->rect.x) {
+                return true;
             }
-            if (hit_ground) {
-                add_piece(piece);
-                *piece = create_piece(random() % 6, piece->x,
-                        -2 * piece->blockWidth + piece->blockWidth / 2,
-                        piece->blockWidth, random() % 4);
-            }
-            yPrevTicks = ticks;
         }
-        xPrevTicks = ticks;
     }
+    return false;
 }
+
+bool is_colliding_piece_blocks_bottom(const Block *block) {
+    unsigned int i, j;
+    unsigned int cols = get_cols();
+    unsigned int rows = get_rows();
+    for (i = 0; i < rows; ++i) {
+        for (j = 0; j < cols; ++j) {
+            const Block *block2 = get_blocks(i, j);
+            if (check_box_collision(&block->rect, &block2->rect)
+                && block->rect.y + (int)block->rect.h >= block2->rect.y
+                && block->rect.x == block2->rect.x
+                && block->rect.y < block2->rect.y + (int)block2->rect.h) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
