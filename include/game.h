@@ -18,5 +18,9 @@ const Block *get_blocks(unsigned int i, unsigned int j);
 unsigned int get_cols(void);
 unsigned int get_rows(void);
 void add_piece(Piece *piece);
+unsigned int get_grid_width(void);
+void set_grid_clear_color(unsigned char r, 
+        unsigned char g, unsigned char b, unsigned char a);
 
 #endif
+
