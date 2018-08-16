@@ -1,5 +1,5 @@
-#ifndef VEC2_H
-#define VEC2_H
+#ifndef FRAMEWORK_VEC2_H
+#define FRAMEWORK_VEC2_H
 
 typedef struct {
     float x;
@@ -14,4 +14,4 @@ typedef struct {
 vec2f add_vec2f(vec2f first, vec2f second);
 vec2i add_vec2i(vec2i first, vec2i second);
 
-#endif // VEC2_H
+#endif // FRAMEWORK_VEC2_H

@@ -1,5 +1,5 @@
-#ifndef BLOCK_H_
-#define BLOCK_H_
+#ifndef GAME_BLOCK_H
+#define GAME_BLOCK_H
 
 #include "collision.h"
 
@@ -19,4 +19,4 @@ Block create_block(SDL_Texture *texture, BlockColor color, int x, int y,
                    unsigned int width);
 void draw_block(const Block *block);
 
-#endif
+#endif // GAME_BLOCK_H

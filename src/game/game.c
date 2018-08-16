@@ -13,6 +13,16 @@
 #define MAX_BLOCKS 40
 #define MAX_PARTICLES 200
 
+#define MIN_PARTICLE_SPEED_X (-50)
+#define MAX_PARTICLE_SPEED_X 50
+#define MIN_PARTICLE_SPEED_Y (-100)
+#define MAX_PARTICLE_SPEED_Y 50
+#define MIN_PARTICLE_RADIUS 1
+#define MAX_PARTICLE_RADIUS 4
+#define MIN_PARTICLE_LIFETIME 100
+#define MAX_PARTICLE_LIFETIME 200
+#define PARTICLES_PER_BLOCK 30
+
 static SDL_Color m_GridColor;
 
 static unsigned int m_BlockWidth;
@@ -21,7 +31,7 @@ static unsigned int m_Cols = 0;
 static Piece m_ActivePiece;
 static Block m_Blocks[MAX_BLOCKS][MAX_BLOCKS / 2] = {{{{0, 0, 0, 0}, 0, NULL}}};
 static Node *m_Particles = NULL; 
-static unsigned int m_GridWidth;
+static unsigned int m_GridWidth = 0;
 
 const Block *get_blocks(unsigned int i, unsigned int j) {
 	return &m_Blocks[i][j];
@@ -43,13 +53,16 @@ void draw_blocks(void) {
 	}
 }
 
+void add_block(Block *block) {
+    int col = block->rect.x / block->rect.w;
+    int row = block->rect.y / block->rect.h - 1;
+    memcpy(&m_Blocks[row][col], block, sizeof(Block));
+}
+
 void add_piece(Piece *piece) {
 	int i = 0;
 	for (; i < 4; ++i) {
-		Block block = piece->blocks[i];
-		int col = block.rect.x / block.rect.w;
-		int row = block.rect.y / block.rect.h - 1;
-		memcpy(&m_Blocks[row][col], &block, sizeof(Block));
+        add_block(&piece->blocks[i]);
 	}
 }
 
@@ -63,19 +76,24 @@ void init_graphics(void) {
 	IMG_Init(IMG_INIT_PNG);
 }
 
-void init_game(unsigned int blockWidth) {
-	/* Initialzie random number generator */
+void init_random(void) {
 	srand(time(NULL));
 	struct timespec ts;
 	if (timespec_get(&ts, TIME_UTC) == 0) {
 		fprintf(stderr, "Error while getting time");
 	}
 	srandom((unsigned)ts.tv_nsec ^ (unsigned)ts.tv_sec); /* Seed the PRNG */
+}
 
+void init_game(unsigned int blockWidth) {
+    init_random();
 	m_BlockWidth = blockWidth;
 	m_GridWidth = get_screen_width() - 7 * m_BlockWidth;
 	m_Rows = get_screen_height() / m_BlockWidth;
 	m_Cols = m_GridWidth / m_BlockWidth;
+}
+
+void create_initial_piece(void) {
 	m_ActivePiece = create_piece(random() % 6, m_GridWidth / 2,
                     -2.5 * m_BlockWidth, m_BlockWidth, random() % 4);
 }
@@ -124,7 +142,7 @@ void process_input(GameState *const gameState) {
 	}
 }
 
-static void draw_grid() {
+void draw_grid() {
 	unsigned int step = m_BlockWidth;
 	SDL_Color backgroundColor = get_clear_color();
     SDL_SetRenderDrawColor(get_renderer(), m_GridColor.r, m_GridColor.g,
@@ -149,7 +167,7 @@ static void draw_grid() {
                            backgroundColor.a);
 }
 
-static void draw_particles(void) {
+void draw_particles(void) {
     Node *node = m_Particles;
     while (node) {
         draw_particle(&node->data);
@@ -165,56 +183,79 @@ void draw_game() {
 }
 
 static vec4u pick_particle_color(BlockColor blockColor) {
-    vec4u color = {10 + random() % 20, 10 + random() % 20, 10 + random() % 20, 255};
+    const int enhancement = 150;
+    const int baseValue = 55;
+    const int salt = 50;
+    vec4u color = { baseValue + random() % salt, baseValue + random() % salt,
+                    baseValue + random() % salt, 255 };
     switch (blockColor) {
         case RED:
-            color.r += 70 + random() % 100;
+            color.r += random() % enhancement;
             break;
         case BLUE:
-            color.b += 70 + random() % 100;
+            color.b += random() % enhancement;
             break;
         case GREEN:
-            color.g += 70 + random() % 100;
+            color.g += random() % enhancement;
             break;
         case YELLOW:
-            color.r += 70 + random() % 100;
-            color.g += 70 + random() % 100;
+            color.r += random() % enhancement;
+            color.g += random() % enhancement;
             break;
     }
     return color;
 }
 
-static void destroy_row(unsigned int row) {
-    unsigned int k, z, i;
-    for (k = row; k > 0; --k) {
+static void push_particles(Block block) {
+    unsigned int i;
+    for (i = 0; i < PARTICLES_PER_BLOCK; ++i) {
+        vec2f position = { block.rect.x + (float)block.rect.w / 2,
+                           block.rect.y + (float)block.rect.h / 2};
+        vec2f velocity =
+            { (random() % (MAX_PARTICLE_SPEED_X
+            - MIN_PARTICLE_SPEED_X) + MIN_PARTICLE_SPEED_X) / 25.0f,
+            (random() % (MAX_PARTICLE_SPEED_X
+            - MIN_PARTICLE_SPEED_Y) + MIN_PARTICLE_SPEED_Y) / 25.0f };
+        vec4u color = pick_particle_color(block.color);
+        int radius = 
+            random() % (MAX_PARTICLE_RADIUS
+            - MIN_PARTICLE_RADIUS) + MIN_PARTICLE_RADIUS;
+        int lifeTime = 
+            random() % (MAX_PARTICLE_LIFETIME
+            - MIN_PARTICLE_LIFETIME) + MIN_PARTICLE_LIFETIME;
+        Particle particle = create_particle(position, radius,
+                                            lifeTime, velocity,
+                                            color);
+        insert_node(&m_Particles, particle);
+    }
+}
+
+/* TODO: Function destroys the blocks above  */
+static void destroy_rows(unsigned int destroyedRow, unsigned int numDestroyedRows) {
+    unsigned int z, i;
+    for (i = 0; i < numDestroyedRows; ++i) {
+        unsigned int row = destroyedRow + i;
         for (z = 0; z < get_cols(); ++z) {
-            Block block = m_Blocks[k][z];
-            if(k == row) {
-                for (i = 0; i < 10; ++i) {
-                    vec2f position = { block.rect.x, block.rect.y };
-                    vec2f velocity = { (random() % 100 - 50) / 25.0f,
-                                       (random() % 100 - 50) / 25.0f};
-                    vec4u color = pick_particle_color(block.color);
-                    int radius = random() % 3 + 2;
-                    int lifeTime = random() % 200 + 200;
-                    Particle particle = create_particle(position, radius,
-                                                        lifeTime, velocity,
-                                                        color);
-                    insert_node(&m_Particles, particle);
-                }
-            }
-            m_Blocks[k][z] = m_Blocks[k - 1][z];
-            m_Blocks[k][z].rect.y += m_BlockWidth;
+            Block block = m_Blocks[row][z];
+            push_particles(block);
+            m_Blocks[row][z] = m_Blocks[row - numDestroyedRows][z];
+            m_Blocks[row][z].rect.y += numDestroyedRows * m_BlockWidth;
+        }
+    }
+    for(i = numDestroyedRows; i < destroyedRow; ++i) {
+        for (z = 0; z < get_cols(); ++z) {
+            m_Blocks[i][z] = m_Blocks[i - numDestroyedRows][z];
+            m_Blocks[i][z].rect.y += numDestroyedRows * m_BlockWidth;
         }
     }
 }
 
-static void update_blocks(void) {
+void update_blocks(void) {
 	unsigned int i, j;
 	unsigned int rows = get_rows();
 	unsigned int cols = get_cols();
     unsigned int numDestroyedRows = 0;
-    int destroyedRows[4] = {0};
+    int destroyedRow = 0;
 	for (i = rows; i > 0; --i) {
 		unsigned int blocksInRow = 0;
 		for (j = 0; j < cols; ++j) {
@@ -224,15 +265,14 @@ static void update_blocks(void) {
 			}
 		}
 		if (blocksInRow == cols) {
-            destroyedRows[numDestroyedRows++] = i;
+            ++numDestroyedRows;
+            destroyedRow = i;
 		}
 	}
-    for (i = 0; i < numDestroyedRows; ++i) {
-        destroy_row(destroyedRows[i]);
-    }
+    destroy_rows(destroyedRow, numDestroyedRows);
 }
 
-static void update_particles(void) {
+void update_particles(void) {
     if (m_Particles != NULL) {
         if (!m_Particles->next && m_Particles->data.currentLifeTime == 0) {
             remove_head(&m_Particles);

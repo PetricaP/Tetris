@@ -1,5 +1,5 @@
-#ifndef PIECE_H_
-#define PIECE_H_
+#ifndef GAME_PIECE_H
+#define GAME_PIECE_H
 
 #include "block.h"
 
@@ -30,5 +30,6 @@ void set_texture_source(const char *redTexturePath,
 bool is_colliding_piece_blocks_left(const Block *block);
 bool is_colliding_piece_blocks_right(const Block *block);
 bool is_colliding_piece_blocks_bottom(const Block *block);
+SDL_Texture *get_texture(int i);
 
-#endif
+#endif // GAME_PIECE_H

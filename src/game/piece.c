@@ -30,6 +30,10 @@ static void initialize_piece_pillar(Piece *piece);
 static void initialize_piece_table(Piece *piece);
 static void update_piece_y(Piece *piece);
 
+SDL_Texture *get_texture(int i) {
+    return m_Textures[i];
+}
+
 Piece create_piece(PieceType type, int x, int y, unsigned int blockWidth,
                    BlockColor color) {
     Piece piece;
@@ -58,10 +62,10 @@ void update_piece(Piece *piece) {
             piece->blocks[i].rect.x += xSpeed * piece->blockWidth;
         }
         xPrevTicks = ticks;
-    }
-    if ((int)ticks - yPrevTicks > yTimeStep) {
-        update_piece_y(piece);
-        yPrevTicks = ticks;
+        if ((int)ticks - yPrevTicks > yTimeStep) {
+            update_piece_y(piece);
+            yPrevTicks = ticks;
+        }
     }
 }
 
@@ -133,8 +137,8 @@ static bool is_colliding_piece(Piece *piece) {
     unsigned int rows = get_rows();
     for (k = 0; k < 4; ++k) {
         Block block = piece->blocks[k];
-        if (block.rect.x > (int)get_grid_width() || block.rect.x < 0 ||
-            block.rect.y > (int)get_screen_height()) {
+        if (block.rect.x + (int)block.rect.w > (int)get_grid_width() ||
+            block.rect.x < 0 || block.rect.y > (int)get_screen_height()) {
             return true;
         }
         for (i = 0; i < rows; ++i) {
@@ -382,6 +386,7 @@ static bool is_colliding_piece_right(const Piece *piece, int border) {
     for (; i < 4; ++i) {
         if(piece->blocks[i].rect.x + (int)piece->blocks[i].rect.w > border ||
             is_colliding_piece_blocks_right(&piece->blocks[i])) {
+            printf("Is colliding!\n");
             return true;
         }
     }

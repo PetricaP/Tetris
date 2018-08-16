@@ -1,5 +1,5 @@
-#ifndef INPUT_MANAGER_H_
-#define INPUT_MANAGER_H_
+#ifndef FRAMEWORK_INPUT_MANAGER_H
+#define FRAMEWORK_INPUT_MANAGER_H
 
 #include <stdbool.h>
 
@@ -9,4 +9,4 @@ void press_key(unsigned int keyID);
 void release_key(unsigned int keyID);
 bool is_key_pressed(unsigned int keyID);
 
-#endif
+#endif // FRAMEWORK_INPUT_MANAGER_H

@@ -1,5 +1,5 @@
-#ifndef WINDOW_H_
-#define WINDOW_H_
+#ifndef FRAMEWORK_WINDOW_H
+#define FRAMEWORK_WINDOW_H
 
 #include <SDL2/SDL.h>
 
@@ -15,4 +15,4 @@ void set_window_clear_color(unsigned char r,  unsigned char g, unsigned char b,
         unsigned char a);
 SDL_Color get_clear_color(void);
 
-#endif
+#endif // FRAMEWORK_WINDOW_H

@@ -1,5 +1,5 @@
-#ifndef VEC4_H
-#define VEC4_H
+#ifndef FRAMEWORK_VEC4_H
+#define FRAMEWORK_VEC4_H
 
 typedef struct {
     unsigned int r;
@@ -8,4 +8,4 @@ typedef struct {
     unsigned int a;
 } vec4u;
 
-#endif // VEC4_H
+#endif // FRAMEWORK_VEC4_H

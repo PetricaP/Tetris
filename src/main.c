@@ -17,6 +17,7 @@ int main() {
     set_texture_source("./res/red_block.png", "res/blue_block.png",
                        "./res/green_block.png", "res/yellow_block.png");
     init_game(blockWidth);
+    create_initial_piece();
     set_window_clear_color(20, 20, 40, 200);
     set_grid_clear_color(40, 20, 20, 200);
     GameState gameState = PLAY;
