@@ -1,5 +1,4 @@
-#include "game.h"
-#include "window.h"
+#include <framework/window.h>
 #include <stdio.h>
 #include <stdlib.h>
 

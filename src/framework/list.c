@@ -21,14 +21,8 @@ void insert_node(Node **head, Particle data) {
 
 void remove_head(Node **head) {
     Node *next = (*head)->next;
-    if (next != NULL) {
-        (*head)->data = next->data;
-        (*head)->next = next->next;
-        free(next);
-    } else {
-        free(*head);
-        *head = NULL;
-    }
+    free(*head);
+    *head = next;
 }
 
 static Node_T *create_node_t(const char *key, TTF_Font *data) {
@@ -37,7 +31,8 @@ static Node_T *create_node_t(const char *key, TTF_Font *data) {
     node->data = data;
     int l = strlen(key);
     node->key = (char *)malloc((l + 1) * sizeof(char));
-    strncpy(node->key, key, l + 1);
+    strncpy(node->key, key, l);
+    node->key[l] = 0;
     return node;
 }
 
@@ -56,3 +51,4 @@ void remove_next_node(Node *nodePtr) {
     nodePtr->next = temp->next;
     free(temp);
 }
+

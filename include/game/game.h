@@ -29,6 +29,7 @@ void draw_particles(void);
 void init_random(void);
 void create_initial_piece(void);
 void update_particles(void);
+void draw_score(void);
 
 #endif // GAME_GAME_H
 

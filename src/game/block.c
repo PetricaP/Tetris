@@ -1,6 +1,6 @@
 #include "block.h"
 #include "game.h"
-#include "window.h"
+#include <framework/window.h>
 
 Block create_block(SDL_Texture *texture, BlockColor color, int x, int y,
                    unsigned int width) {

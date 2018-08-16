@@ -1,9 +1,12 @@
 SRC_PATH=src/
 CC=gcc
-WN=-Wall -Wextra --pedantic -g
+WN=-Werror -Wall -Wextra --pedantic -g
 CFLAGS=-c ${WN}
 
-INCL=-Iinclude/ -Iinclude/framework/ -Iinclude/game/ -Iinclude/tests/
+INCL=-Iinclude/
+INCLF=${INCL} -Iinclude/framework/
+INCLG=${INCL} -Iinclude/game/
+INCLT=${INCL} -Iinclude/tests
 FLAGS=-lSDL2 -lSDL2_ttf -lSDL2_image -lm
 EXE=output
 
@@ -27,15 +30,15 @@ obj/%.o: $(SRC_PATH)%.c
 	    $(CC) $(CFLAGS) $(INCL) -o $@ $<
 
 obj/tests/%.o: $(SRC_PATH)tests/%.c
-	    $(CC) $(CFLAGS) $(INCL) -o $@ $<
+	    $(CC) $(CFLAGS) $(INCLT) -o $@ $<
 
 obj/framework/%.o: $(SRC_PATH)framework/%.c
-	    $(CC) $(CFLAGS) $(INCL) -o $@ $<
+	    $(CC) $(CFLAGS) $(INCLF) -o $@ $<
 
 obj/game/%.o: $(SRC_PATH)game/%.c
-	    $(CC) $(CFLAGS) $(INCL) -o $@ $<
+	    $(CC) $(CFLAGS) $(INCLG) -o $@ $<
 
 
 .PHONY : clean
 clean :
-	    -rm output && find obj/ -type f -delete
+	    -rm output tests/* && find obj/ -type f -delete

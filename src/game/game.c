@@ -1,10 +1,11 @@
 #include "game.h"
-#include "input_manager.h"
-#include "list.h"
-#include "particle.h"
-#include "window.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <framework/font_manager.h>
+#include <framework/input_manager.h>
+#include <framework/list.h>
+#include <framework/particle.h>
+#include <framework/window.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,15 +14,23 @@
 #define MAX_BLOCKS 40
 #define MAX_PARTICLES 200
 
-#define MIN_PARTICLE_SPEED_X (-50)
-#define MAX_PARTICLE_SPEED_X 50
-#define MIN_PARTICLE_SPEED_Y (-100)
-#define MAX_PARTICLE_SPEED_Y 50
+#define MIN_PARTICLE_SPEED_X (-30)
+#define MAX_PARTICLE_SPEED_X 30
+
+#define MIN_PARTICLE_SPEED_Y (-70)
+#define MAX_PARTICLE_SPEED_Y 20
+
 #define MIN_PARTICLE_RADIUS 1
 #define MAX_PARTICLE_RADIUS 4
+
 #define MIN_PARTICLE_LIFETIME 100
 #define MAX_PARTICLE_LIFETIME 200
-#define PARTICLES_PER_BLOCK 30
+
+#define PARTICLES_PER_BLOCK 20
+
+#define ROW_SCORE 50
+
+static int m_Score = 0;
 
 static SDL_Color m_GridColor;
 
@@ -29,9 +38,17 @@ static unsigned int m_BlockWidth;
 static unsigned int m_Rows = 0;
 static unsigned int m_Cols = 0;
 static Piece m_ActivePiece;
-static Block m_Blocks[MAX_BLOCKS][MAX_BLOCKS / 2] = {{{{0, 0, 0, 0}, 0, NULL}}};
+
+// TODO(ppetrica): Consider using dynamically allocated blocks
+// (maybe actually switch to a matrix of numbers)
+static Block m_Blocks[MAX_BLOCKS][MAX_BLOCKS / 2] = { { { { 0, 0, 0, 0 }, 0, NULL } } };
 static Node *m_Particles = NULL; 
 static unsigned int m_GridWidth = 0;
+
+// TODO(ppetrica): Add score (Why do fonts crash the game?)
+
+SDL_Texture *m_ScoreTexture = NULL;
+SDL_Texture *m_ScoreTextTexture = NULL;
 
 const Block *get_blocks(unsigned int i, unsigned int j) {
 	return &m_Blocks[i][j];
@@ -40,6 +57,13 @@ const Block *get_blocks(unsigned int i, unsigned int j) {
 unsigned int get_grid_width(void) {
     return m_GridWidth;
 }
+
+/* static void update_score() {
+    char scoreString[12];
+    sprintf(scoreString, "%d", m_Score);
+    SDL_Color color = { 200, 200, 200, 255 };
+    m_ScoreTexture = generate_text_texture(scoreString, color);
+} */
 
 void draw_blocks(void) {
 	unsigned int i, j;
@@ -87,14 +111,20 @@ void init_random(void) {
 
 void init_game(unsigned int blockWidth) {
     init_random();
+    // init_fonts();
 	m_BlockWidth = blockWidth;
 	m_GridWidth = get_screen_width() - 7 * m_BlockWidth;
 	m_Rows = get_screen_height() / m_BlockWidth;
 	m_Cols = m_GridWidth / m_BlockWidth;
+    // set_font("res/DejaVu.ttf");
+    // update_score();
+
+    // SDL_Color color = { 100, 100, 100, 255 };
+    // m_ScoreTextTexture = generate_text_texture("Score", color);
 }
 
 void create_initial_piece(void) {
-	m_ActivePiece = create_piece(random() % 6, m_GridWidth / 2,
+	m_ActivePiece = create_piece(random() % PIECE_TYPES, m_GridWidth / 2,
                     -2.5 * m_BlockWidth, m_BlockWidth, random() % 4);
 }
 
@@ -179,6 +209,7 @@ void draw_game() {
 	draw_grid();
 	draw_piece(&m_ActivePiece);
 	draw_blocks();
+    // draw_score();
     draw_particles();
 }
 
@@ -213,9 +244,9 @@ static void push_particles(Block block) {
                            block.rect.y + (float)block.rect.h / 2};
         vec2f velocity =
             { (random() % (MAX_PARTICLE_SPEED_X
-            - MIN_PARTICLE_SPEED_X) + MIN_PARTICLE_SPEED_X) / 25.0f,
+            - MIN_PARTICLE_SPEED_X) + MIN_PARTICLE_SPEED_X) / 20.0f,
             (random() % (MAX_PARTICLE_SPEED_X
-            - MIN_PARTICLE_SPEED_Y) + MIN_PARTICLE_SPEED_Y) / 25.0f };
+            - MIN_PARTICLE_SPEED_Y) + MIN_PARTICLE_SPEED_Y) / 20.0f };
         vec4u color = pick_particle_color(block.color);
         int radius = 
             random() % (MAX_PARTICLE_RADIUS
@@ -230,8 +261,8 @@ static void push_particles(Block block) {
     }
 }
 
-/* TODO: Function destroys the blocks above  */
-static void destroy_rows(unsigned int destroyedRow, unsigned int numDestroyedRows) {
+static void destroy_rows(unsigned int destroyedRow, 
+                         unsigned int numDestroyedRows) {
     unsigned int z, i;
     for (i = 0; i < numDestroyedRows; ++i) {
         unsigned int row = destroyedRow + i;
@@ -242,12 +273,14 @@ static void destroy_rows(unsigned int destroyedRow, unsigned int numDestroyedRow
             m_Blocks[row][z].rect.y += numDestroyedRows * m_BlockWidth;
         }
     }
-    for(i = numDestroyedRows; i < destroyedRow; ++i) {
+    for(i = destroyedRow; i > numDestroyedRows; --i) {
         for (z = 0; z < get_cols(); ++z) {
             m_Blocks[i][z] = m_Blocks[i - numDestroyedRows][z];
             m_Blocks[i][z].rect.y += numDestroyedRows * m_BlockWidth;
         }
     }
+    m_Score += numDestroyedRows * ROW_SCORE * pow(2, numDestroyedRows);
+    // update_score();
 }
 
 void update_blocks(void) {
@@ -274,15 +307,22 @@ void update_blocks(void) {
 
 void update_particles(void) {
     if (m_Particles != NULL) {
-        if (!m_Particles->next && m_Particles->data.currentLifeTime == 0) {
+        if (m_Particles->data.currentLifeTime <= 0 ||
+            m_Particles->data.position.x < 0 ||
+            m_Particles->data.position.x > get_screen_width() ||
+            m_Particles->data.position.y > get_screen_height()) {
             remove_head(&m_Particles);
         } else {
+            update_particle(&m_Particles->data);
             Node *node = m_Particles;
             while (node->next != NULL) {
-                if(node->next->data.currentLifeTime == 0) {
+                if(node->next->data.currentLifeTime <= 0 ||
+                   node->next->data.position.x < 0 ||
+                   node->next->data.position.x > get_screen_width() ||
+                   node->next->data.position.y > get_screen_height()) {
                     remove_next_node(node);
                 } else {
-                    update_particle(&node->data);
+                    update_particle(&node->next->data);
                     node = node->next;
                 }
             }
@@ -302,4 +342,20 @@ void update_game(void) {
 	update_piece(&m_ActivePiece);
 	update_blocks();
     update_particles();
+}
+
+void draw_score(void) {
+    vec2i scorePosition = { get_grid_width() +
+                            (get_screen_width() - get_grid_width()) / 2,
+                            5 * m_BlockWidth };
+    int letterWidth = m_BlockWidth * 3 / 4;
+    int letterHeight = letterWidth * 5 / 3;
+
+    char scoreString[12];
+    sprintf(scoreString, "%d", m_Score);
+    draw_text_texture(m_ScoreTexture, scoreString, scorePosition,
+                      letterWidth, letterHeight);
+    scorePosition.y -= m_BlockWidth / 2;
+    draw_text_texture(m_ScoreTextTexture, "Score", scorePosition,
+                      letterWidth, letterHeight);
 }

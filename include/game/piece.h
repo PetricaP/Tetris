@@ -4,9 +4,10 @@
 #include "block.h"
 
 #define MAX_PIECES 40
+#define PIECE_TYPES 7
 
 typedef enum { 
-    LBED, LCHAIR, TABLE, RBED, RCHAIR, PILLAR
+    LBED, LCHAIR, TABLE, RBED, RCHAIR, PILLAR, BLOCK
 } PieceType;
 
 typedef struct {

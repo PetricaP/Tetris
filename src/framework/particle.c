@@ -6,7 +6,8 @@
 
 const vec2f GRAVITY = { 0.0f, 0.05f };
 
-Particle create_particle(vec2f position, int radius, int lifeTime, vec2f velocity, vec4u color) {
+Particle create_particle(vec2f position, int radius, int lifeTime,
+                         vec2f velocity, vec4u color) {
     Particle particle;
     particle.position = position;
     particle.velocity = velocity;
@@ -22,7 +23,8 @@ void update_particle(Particle *particle) {
     particle->velocity = add_vec2f(particle->velocity, GRAVITY);
     if (particle->lifeTime != 0) {
         --particle->currentLifeTime;
-        particle->color.a = (float) particle->currentLifeTime / particle->lifeTime * 255;
+        particle->color.a = (float)particle->currentLifeTime / 
+                            particle->lifeTime * 255;
     }
 }
 

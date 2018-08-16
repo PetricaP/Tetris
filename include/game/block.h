@@ -1,9 +1,8 @@
 #ifndef GAME_BLOCK_H
 #define GAME_BLOCK_H
 
-#include "collision.h"
-
 #include <SDL2/SDL.h>
+#include <framework/collision.h>
 
 typedef enum {
     RED = 0, BLUE = 1, GREEN = 2, YELLOW = 3

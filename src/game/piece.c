@@ -1,14 +1,14 @@
 #include "piece.h"
 #include "game.h"
-#include "input_manager.h"
-#include "window.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <framework/input_manager.h>
+#include <framework/window.h>
 #include <stdbool.h>
 #include <stdio.h>
 
-#define SMALL_Y_TIME_STEP 50
-#define BIG_Y_TIME_STEP 300
+#define SMALL_Y_TIME_STEP 25
+#define BIG_Y_TIME_STEP 200
 #define X_TIME_STEP 100
 
 static SDL_Texture *m_Textures[4] = { NULL };
@@ -28,6 +28,7 @@ static void initialize_piece_lchair(Piece *piece);
 static void initialize_piece_rchair(Piece *piece);
 static void initialize_piece_pillar(Piece *piece);
 static void initialize_piece_table(Piece *piece);
+static void initialize_piece_block(Piece *piece);
 static void update_piece_y(Piece *piece);
 
 SDL_Texture *get_texture(int i) {
@@ -88,7 +89,7 @@ static void update_piece_y(Piece *piece) {
             piece->blocks[i].rect.y -= piece->blockWidth;
         }
         add_piece(piece);
-        *piece = create_piece(random() % 6, 
+        *piece = create_piece(random() % PIECE_TYPES, 
                 get_cols() / 2 * piece->blockWidth + piece->blockWidth / 2,
                 -2 * piece->blockWidth + piece->blockWidth / 2,
                 piece->blockWidth, random() % 4);
@@ -154,19 +155,16 @@ static bool is_colliding_piece(Piece *piece) {
 }
 
 static void rotate_piece(Piece *piece) {
-    Piece copy = *piece;
-    for (int i = 0; i < 4; ++i) {
-        int dx = copy.blocks[i].rect.x + copy.blockWidth - copy.x;
-        int dy = copy.blocks[i].rect.y + copy.blockWidth - copy.y;
-        copy.blocks[i].rect.x = copy.x - dy - copy.blockWidth;
-        copy.blocks[i].rect.y = copy.y + dx - copy.blockWidth;
-    }
-    if (!is_colliding_piece(&copy)) {
+    if (piece->type != BLOCK) {
+        Piece copy = *piece;
         for (int i = 0; i < 4; ++i) {
-            int dx = piece->blocks[i].rect.x + piece->blockWidth - piece->x;
-            int dy = piece->blocks[i].rect.y + piece->blockWidth - piece->y;
-            piece->blocks[i].rect.x = piece->x - dy - piece->blockWidth;
-            piece->blocks[i].rect.y = piece->y + dx - piece->blockWidth;
+            int dx = copy.blocks[i].rect.x + copy.blockWidth - copy.x;
+            int dy = copy.blocks[i].rect.y + copy.blockWidth - copy.y;
+            copy.blocks[i].rect.x = copy.x - dy - copy.blockWidth;
+            copy.blocks[i].rect.y = copy.y + dx - copy.blockWidth;
+        }
+        if (!is_colliding_piece(&copy)) {
+            *piece = copy;
         }
     }
 }
@@ -196,7 +194,34 @@ static void initialize_piece(Piece *piece) {
         case PILLAR:
             initialize_piece_pillar(piece);
             break;
+
+        case BLOCK:
+            initialize_piece_block(piece);
+            break;
     }
+}
+
+static void initialize_piece_block(Piece *piece) {
+    piece->blocks[0] = create_block(piece->m_BlockTexture,
+                                    piece->color,
+                                    piece->x - piece->blockWidth / 2,
+                                    piece->y - piece->blockWidth / 2,
+                                    piece->blockWidth);
+    piece->blocks[1] = create_block(piece->m_BlockTexture,
+                                    piece->color,
+                                    piece->x + piece->blockWidth / 2,
+                                    piece->y - piece->blockWidth / 2,
+                                    piece->blockWidth);
+    piece->blocks[2] = create_block(piece->m_BlockTexture,
+                                    piece->color,
+                                    piece->x + piece->blockWidth / 2,
+                                    piece->y + piece->blockWidth / 2,
+                                    piece->blockWidth);
+    piece->blocks[3] = create_block(piece->m_BlockTexture,
+                                    piece->color,
+                                    piece->x - piece->blockWidth / 2,
+                                    piece->y + piece->blockWidth / 2,
+                                    piece->blockWidth);
 }
 
 /*  000  */
@@ -386,7 +411,6 @@ static bool is_colliding_piece_right(const Piece *piece, int border) {
     for (; i < 4; ++i) {
         if(piece->blocks[i].rect.x + (int)piece->blocks[i].rect.w > border ||
             is_colliding_piece_blocks_right(&piece->blocks[i])) {
-            printf("Is colliding!\n");
             return true;
         }
     }

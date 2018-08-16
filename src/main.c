@@ -1,10 +1,7 @@
-#include "game.h"
-#include "circle.h"
-#include "particle.h"
-#include "piece.h"
-#include "window.h"
+#include "game/game.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <framework/window.h>
 #include <stdbool.h>
 #include <stdio.h>
 
