@@ -39,13 +39,10 @@ static unsigned int m_Rows = 0;
 static unsigned int m_Cols = 0;
 static Piece m_ActivePiece;
 
-// TODO(ppetrica): Consider using dynamically allocated blocks
-// (maybe actually switch to a matrix of numbers)
 static Block m_Blocks[MAX_BLOCKS][MAX_BLOCKS / 2] = { { { { 0, 0, 0, 0 }, 0, NULL } } };
 static Node *m_Particles = NULL; 
 static unsigned int m_GridWidth = 0;
 
-// TODO(ppetrica): Add score (Why do fonts crash the game?)
 
 SDL_Texture *m_ScoreTexture = NULL;
 SDL_Texture *m_ScoreTextTexture = NULL;
@@ -58,12 +55,12 @@ unsigned int get_grid_width(void) {
     return m_GridWidth;
 }
 
-/* static void update_score() {
+static void update_score() {
     char scoreString[12];
     sprintf(scoreString, "%d", m_Score);
     SDL_Color color = { 200, 200, 200, 255 };
     m_ScoreTexture = generate_text_texture(scoreString, color);
-} */
+}
 
 void draw_blocks(void) {
 	unsigned int i, j;
@@ -111,16 +108,16 @@ void init_random(void) {
 
 void init_game(unsigned int blockWidth) {
     init_random();
-    // init_fonts();
+    init_fonts();
 	m_BlockWidth = blockWidth;
 	m_GridWidth = get_screen_width() - 7 * m_BlockWidth;
 	m_Rows = get_screen_height() / m_BlockWidth;
 	m_Cols = m_GridWidth / m_BlockWidth;
-    // set_font("res/DejaVu.ttf");
-    // update_score();
+    set_font("res/DejaVu.ttf");
+    update_score();
 
-    // SDL_Color color = { 100, 100, 100, 255 };
-    // m_ScoreTextTexture = generate_text_texture("Score", color);
+    SDL_Color color = { 100, 100, 100, 255 };
+    m_ScoreTextTexture = generate_text_texture("Score", color);
 }
 
 void create_initial_piece(void) {
@@ -209,7 +206,7 @@ void draw_game() {
 	draw_grid();
 	draw_piece(&m_ActivePiece);
 	draw_blocks();
-    // draw_score();
+    draw_score();
     draw_particles();
 }
 
@@ -280,7 +277,7 @@ static void destroy_rows(unsigned int destroyedRow,
         }
     }
     m_Score += numDestroyedRows * ROW_SCORE * pow(2, numDestroyedRows);
-    // update_score();
+    update_score();
 }
 
 void update_blocks(void) {
