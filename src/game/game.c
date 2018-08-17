@@ -165,7 +165,7 @@ void process_input(GameState *const gameState) {
 		*gameState = PLAY;
 	}
 	if (is_key_pressed(SDLK_ESCAPE)) {
-		*gameState = PLAY;
+		*gameState = EXIT;
 	}
 }
 
