@@ -41,6 +41,7 @@ SDL_Texture *generate_text_texture(const char *message, SDL_Color color) {
         printf("Couldn't create textTexture. Error: %s", SDL_GetError());
         exit(1);
     }
+    SDL_FreeSurface(textSurface);
     return textTexture;
 }
 

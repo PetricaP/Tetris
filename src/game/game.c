@@ -26,7 +26,7 @@
 #define MIN_PARTICLE_LIFETIME 100
 #define MAX_PARTICLE_LIFETIME 200
 
-#define PARTICLES_PER_BLOCK 20
+#define PARTICLES_PER_BLOCK 10
 
 #define ROW_SCORE 50
 
@@ -120,15 +120,15 @@ void init_game(unsigned int blockWidth) {
     m_ScoreTextTexture = generate_text_texture("Score", color);
 }
 
+void close_game(void) {
+    TTF_Quit();
+    IMG_Quit();
+    SDL_Quit();
+}
+
 void create_initial_piece(void) {
 	m_ActivePiece = create_piece(random() % PIECE_TYPES, m_GridWidth / 2,
                     -2.5 * m_BlockWidth, m_BlockWidth, random() % 4);
-}
-
-void close_game() {
-	/* Deinitialize SDL */
-	IMG_Quit();
-	SDL_Quit();
 }
 
 void cap_fps(unsigned int max_fps) {

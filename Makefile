@@ -14,10 +14,11 @@ SRC=$(wildcard $(SRC_PATH)framework/*.c $(SRC_PATH)game/*.c)
 OBJ=$(subst src, obj, $(SRC:.c=.o))
 TESTSRC=$(wildcard $(SRC_PATH)tests/*.c)
 TESTS=$(subst src/, , $(TESTSRC:.c= ))
+TESTSP=$(subst test_, tests/, $(TESTS))
 
-all: $(EXE) $(TESTS)
+all: $(EXE) $(TESTSP)
 
-tests/test%: obj/tests/test%.o $(OBJ)
+tests/%: obj/tests/test_%.o $(OBJ)
 	    $(CC) -o $@ $^ $(FLAGS) $(WN)
 
 $(EXE): $(OBJ) obj/main.o

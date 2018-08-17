@@ -1,14 +1,18 @@
 # Requirements File
 
+
 ###    FEATURES    ###
 
-##    IN PROGRESS    ##
+
+##  IN PROGRESS  ##
 
 1. Score tracking and displaying
 
-##    FOR FUTURE    ##
+##  FOR FUTURE  ##
 
 * Adding game over state
+
+
 
 ###    ISSUES    ###
 
