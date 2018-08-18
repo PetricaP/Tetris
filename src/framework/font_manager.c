@@ -16,7 +16,7 @@ void set_font(const char *filePath) {
             fprintf(stderr, "Couldn't load font from %s\n", filePath);
             exit(EXIT_FAILURE);
         }
-        TTF_SetFontStyle(m_CurrentFont, TTF_STYLE_BOLD);
+        TTF_SetFontStyle(m_CurrentFont, 0);
         insert(m_Fonts, filePath, m_CurrentFont);
     }
 }
@@ -65,7 +65,4 @@ void draw_text_texture(SDL_Texture *texture, const char *message, vec2i position
     int offset_y = letterHeight / 2;
     SDL_Rect textRect = { position.x - offset_x, position.y - offset_y, width, letterHeight };
     SDL_RenderCopy(get_renderer(), texture, NULL, &textRect);
-    SDL_DestroyTexture(texture);
-    SDL_RenderCopy(get_renderer(), texture, NULL, &textRect);
-    SDL_DestroyTexture(texture);
 }

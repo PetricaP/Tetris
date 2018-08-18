@@ -3,7 +3,6 @@
 
 ###    FEATURES    ###
 
-
 ##  IN PROGRESS  ##
 
 1. Score tracking and displaying
@@ -13,7 +12,7 @@
 * Adding game over state
 
 
-
 ###    ISSUES    ###
 
-1. Adding font rendering crashes game after a while
+1. Game crashes when blocks stop above the screen
+2. Only consecutive rows are destroyed

@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static SDL_Renderer *m_Renderer;
+static SDL_Renderer *m_Renderer = NULL;
 static unsigned int m_ScreenWidth;
 static unsigned int m_ScreenHeight;
 static SDL_Color m_ClearColor;
@@ -26,6 +26,10 @@ Window create_window(const char *name, unsigned int width, unsigned int height) 
 }
 
 SDL_Renderer *get_renderer(void) {
+    if (m_Renderer == NULL) {
+        fprintf(stderr, "Renderer is NULL\n");
+        exit(1);
+    }
     return m_Renderer;
 }
 

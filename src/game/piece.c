@@ -1,7 +1,6 @@
 #include "piece.h"
 #include "game.h"
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
+#include "piece_factory.h"
 #include <framework/input_manager.h>
 #include <framework/window.h>
 #include <stdbool.h>
@@ -11,29 +10,14 @@
 #define BIG_Y_TIME_STEP 200
 #define X_TIME_STEP 100
 
-static SDL_Texture *m_Textures[4] = { NULL };
 
-static void initialize_piece(Piece *piece);
 static void player_change(Piece *piece, int *xSpeedP,
         unsigned int *yTimeStepP);
 static bool is_colliding_piece_right(const Piece *piece, int border);
 static bool is_colliding_piece_bottom(const Piece *piece, int border);
 static bool is_colliding_piece_left(const Piece *piece, int border);
 static void rotate_piece(Piece *piece);
-static void initialize_piece_center(Piece *piece);
-static void initialize_piece_bed(Piece *piece);
-static void initialize_piece_lbed(Piece *piece);
-static void initialize_piece_rbed(Piece *piece);
-static void initialize_piece_lchair(Piece *piece);
-static void initialize_piece_rchair(Piece *piece);
-static void initialize_piece_pillar(Piece *piece);
-static void initialize_piece_table(Piece *piece);
-static void initialize_piece_block(Piece *piece);
-static void update_piece_y(Piece *piece);
-
-SDL_Texture *get_texture(int i) {
-    return m_Textures[i];
-}
+static void update_piece_y(Piece *piece, Piece *nextPiece);
 
 Piece create_piece(PieceType type, int x, int y, unsigned int blockWidth,
                    BlockColor color) {
@@ -43,12 +27,12 @@ Piece create_piece(PieceType type, int x, int y, unsigned int blockWidth,
     piece.blockWidth = blockWidth;
     piece.color = color;
     piece.type = type;
-    piece.m_BlockTexture = m_Textures[color];
+    piece.m_BlockTexture = get_texture(color);
     initialize_piece(&piece);
     return piece;
 }
 
-void update_piece(Piece *piece) {
+void update_piece(Piece *piece, Piece *nextPiece) {
     static unsigned int xPrevTicks = 0;
     static unsigned int yPrevTicks = 0;
     unsigned int yTimeStep = BIG_Y_TIME_STEP;
@@ -64,13 +48,13 @@ void update_piece(Piece *piece) {
         }
         xPrevTicks = ticks;
         if ((int)ticks - yPrevTicks > yTimeStep) {
-            update_piece_y(piece);
+            update_piece_y(piece, nextPiece);
             yPrevTicks = ticks;
         }
     }
 }
 
-static void update_piece_y(Piece *piece) {
+static void update_piece_y(Piece *piece, Piece *nextPiece) {
     int i = 0;
     bool hit_ground = false;
     piece->y += piece->blockWidth;
@@ -89,10 +73,11 @@ static void update_piece_y(Piece *piece) {
             piece->blocks[i].rect.y -= piece->blockWidth;
         }
         add_piece(piece);
-        *piece = create_piece(random() % PIECE_TYPES, 
-                get_cols() / 2 * piece->blockWidth + piece->blockWidth / 2,
-                -2 * piece->blockWidth + piece->blockWidth / 2,
-                piece->blockWidth, random() % 4);
+        *piece = create_piece(nextPiece->type, get_grid_width() / 2,
+                              -2 * piece->blockWidth + piece->blockWidth / 2,
+                              piece->blockWidth, nextPiece->color);
+        *nextPiece = create_piece(random() % PIECE_TYPES, get_grid_width() + 90,
+                        piece->blockWidth * 10, piece->blockWidth, random() % 4);
     }
 }
 
@@ -166,236 +151,6 @@ static void rotate_piece(Piece *piece) {
         if (!is_colliding_piece(&copy)) {
             *piece = copy;
         }
-    }
-}
-
-static void initialize_piece(Piece *piece) {
-    switch (piece->type) {
-        case LBED:
-            initialize_piece_lbed(piece);
-            break;
-
-        case RBED:
-            initialize_piece_rbed(piece);
-            break;
-
-        case TABLE:
-            initialize_piece_table(piece);
-            break;
-
-        case LCHAIR:
-            initialize_piece_lchair(piece);
-            break;
-
-        case RCHAIR:
-            initialize_piece_rchair(piece);
-            break;
-
-        case PILLAR:
-            initialize_piece_pillar(piece);
-            break;
-
-        case BLOCK:
-            initialize_piece_block(piece);
-            break;
-    }
-}
-
-static void initialize_piece_block(Piece *piece) {
-    piece->blocks[0] = create_block(piece->m_BlockTexture,
-                                    piece->color,
-                                    piece->x - piece->blockWidth / 2,
-                                    piece->y - piece->blockWidth / 2,
-                                    piece->blockWidth);
-    piece->blocks[1] = create_block(piece->m_BlockTexture,
-                                    piece->color,
-                                    piece->x + piece->blockWidth / 2,
-                                    piece->y - piece->blockWidth / 2,
-                                    piece->blockWidth);
-    piece->blocks[2] = create_block(piece->m_BlockTexture,
-                                    piece->color,
-                                    piece->x + piece->blockWidth / 2,
-                                    piece->y + piece->blockWidth / 2,
-                                    piece->blockWidth);
-    piece->blocks[3] = create_block(piece->m_BlockTexture,
-                                    piece->color,
-                                    piece->x - piece->blockWidth / 2,
-                                    piece->y + piece->blockWidth / 2,
-                                    piece->blockWidth);
-}
-
-/*  000  */
-/*  010  */
-/*  000  */
-static void initialize_piece_center(Piece *piece) {
-    piece->blocks[0] = create_block(piece->m_BlockTexture,
-                                    piece->color,
-                                    piece->x - piece->blockWidth / 2,
-                                    piece->y - piece->blockWidth / 2,
-                                    piece->blockWidth);
-}
-
-/*  000  */
-/*  111  */
-/*  000  */
-static void initialize_piece_bed(Piece *piece) {
-    initialize_piece_center(piece);
-
-    piece->blocks[1] = create_block(piece->m_BlockTexture,
-                                    piece->color,
-                                    piece->x - piece->blockWidth * 3 / 2,
-                                    piece->y - piece->blockWidth / 2,
-                                    piece->blockWidth);
-
-    piece->blocks[2] = create_block(piece->m_BlockTexture,
-                                    piece->color,
-                                    piece->x + piece->blockWidth / 2,
-                                    piece->y - piece->blockWidth / 2,
-                                    piece->blockWidth);
-}
-
-/*  100  */
-/*  111  */
-/*  000  */
-static void initialize_piece_lbed(Piece *piece) {
-    initialize_piece_bed(piece);
-
-    piece->blocks[3] = create_block(piece->m_BlockTexture,
-                                    piece->color,
-                                    piece->x - piece->blockWidth * 3 / 2,
-                                    piece->y - piece->blockWidth * 3 / 2,
-                                    piece->blockWidth);
-}
-
-/*  001  */
-/*  111  */
-/*  000  */
-static void initialize_piece_rbed(Piece *piece) {
-    initialize_piece_bed(piece);
-
-    piece->blocks[3] = create_block(piece->m_BlockTexture,
-                                    piece->color,
-                                    piece->x + piece->blockWidth / 2,
-                                    piece->y - piece->blockWidth * 3 / 2,
-                                    piece->blockWidth);
-}
-
-/*  010  */
-/*  111  */
-/*  000  */
-static void initialize_piece_table(Piece *piece) {
-    initialize_piece_bed(piece);
-
-    piece->blocks[3] = create_block(piece->m_BlockTexture,
-                                    piece->color,
-                                    piece->x - piece->blockWidth / 2,
-                                    piece->y - piece->blockWidth * 3 / 2,
-                                    piece->blockWidth);
-}
-
-/*  001  */
-/*  011  */
-/*  010  */
-static void initialize_piece_rchair(Piece *piece) {
-    initialize_piece_center(piece);
-
-    piece->blocks[1] = create_block(piece->m_BlockTexture,
-                                    piece->color,
-                                    piece->x + piece->blockWidth / 2,
-                                    piece->y - piece->blockWidth / 2,
-                                    piece->blockWidth);
-
-    piece->blocks[2] = create_block(piece->m_BlockTexture,
-                                    piece->color,
-                                    piece->x + piece->blockWidth / 2,
-                                    piece->y - piece->blockWidth * 3 / 2,
-                                    piece->blockWidth);
-
-    piece->blocks[3] = create_block(piece->m_BlockTexture,
-                                    piece->color,
-                                    piece->x - piece->blockWidth / 2,
-                                    piece->y + piece->blockWidth / 2,
-                                    piece->blockWidth);
-}
-
-/*  100  */
-/*  110  */
-/*  010  */
-static void initialize_piece_lchair(Piece *piece) {
-    initialize_piece_center(piece);
-
-    piece->blocks[1] = create_block(piece->m_BlockTexture,
-                                    piece->color,
-                                    piece->x + piece->blockWidth / 2,
-                                    piece->y - piece->blockWidth / 2,
-                                    piece->blockWidth);
-
-    piece->blocks[2] = create_block(piece->m_BlockTexture,
-                                    piece->color,
-                                    piece->x - piece->blockWidth / 2,
-                                    piece->y - piece->blockWidth * 3 / 2,
-                                    piece->blockWidth);
-
-    piece->blocks[3] = create_block(piece->m_BlockTexture,
-                                    piece->color,
-                                    piece->x + piece->blockWidth / 2,
-                                    piece->y + piece->blockWidth / 2,
-                                    piece->blockWidth);
-}
-
-/*  010  */
-/*  010  */
-/*  010  */
-/*  010  */
-static void initialize_piece_pillar(Piece *piece) {
-    initialize_piece_center(piece);
-
-    piece->blocks[1] = create_block(piece->m_BlockTexture,
-                                    piece->color,
-                                    piece->x - piece->blockWidth / 2,
-                                    piece->y + piece->blockWidth / 2,
-                                    piece->blockWidth);
-
-    piece->blocks[2] = create_block(piece->m_BlockTexture,
-                                    piece->color,
-                                    piece->x - piece->blockWidth / 2,
-                                    piece->y - piece->blockWidth * 3 / 2,
-                                    piece->blockWidth);
-
-    piece->blocks[3] = create_block(piece->m_BlockTexture,
-                                    piece->color,
-                                    piece->x - piece->blockWidth / 2,
-                                    piece->y - piece->blockWidth * 5 / 2,
-                                    piece->blockWidth);
-}
-
-void set_texture_source(const char *redTexturePath, 
-                        const char *blueTexturePath,
-                        const char *greenTexturePath,
-                        const char *yellowTexturePath) {
-
-    m_Textures[RED] = IMG_LoadTexture(get_renderer(),
-            redTexturePath);
-    if (m_Textures[RED] == NULL) {
-        fprintf(stderr, "Couldn't load texture %s\n", redTexturePath);
-    }
-
-    m_Textures[BLUE] = IMG_LoadTexture(get_renderer(),
-            blueTexturePath);
-    if (m_Textures[BLUE] == NULL) {
-        fprintf(stderr, "Couldn't load texture %s\n", blueTexturePath);
-    }
-
-    m_Textures[GREEN] = IMG_LoadTexture(get_renderer(),
-            greenTexturePath);
-    if (m_Textures[GREEN] == NULL) {
-        fprintf(stderr, "Couldn't load texture %s\n", greenTexturePath);
-    }
-
-    m_Textures[YELLOW] = IMG_LoadTexture(get_renderer(),
-            yellowTexturePath);
-    if (m_Textures[YELLOW] == NULL) {
-        fprintf(stderr, "Couldn't load texture %s\n", yellowTexturePath);
     }
 }
 

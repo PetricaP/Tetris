@@ -3,13 +3,13 @@
 
 #include "piece.h"
 
-typedef enum { PLAY, PAUSE, EXIT } GameState;
+typedef enum { PLAY = 0, PAUSE = 1, EXIT = 2, END = 3 } GameState;
 
 void init_graphics(void);
-void init_game(unsigned int blockWidth);
+void init_game(unsigned int blockWidth, GameState *gameState);
 void close_game();
 void cap_fps(unsigned int max_fps);
-void process_input(GameState* gameState);
+void process_input();
 void draw_game();
 void update_game();
 void update_blocks(void);
@@ -27,7 +27,7 @@ void draw_grid(void);
 void draw_blocks(void);
 void draw_particles(void);
 void init_random(void);
-void create_initial_piece(void);
+void create_initial_pieces(void);
 void update_particles(void);
 void draw_score(void);
 

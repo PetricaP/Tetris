@@ -22,15 +22,10 @@ typedef struct {
 Piece create_piece(PieceType type, int x, int y, unsigned int blockWidth,
         BlockColor color);
 void draw_piece(const Piece *piece);
-void update_piece(Piece *piece);
-void set_texture_source(const char *redTexturePath, 
-                        const char *blueTexturePath,
-                        const char *greenTexturePath,
-                        const char *yellowTexturePath);
+void update_piece(Piece *piece, Piece *nextPiece);
 
 bool is_colliding_piece_blocks_left(const Block *block);
 bool is_colliding_piece_blocks_right(const Block *block);
 bool is_colliding_piece_blocks_bottom(const Block *block);
-SDL_Texture *get_texture(int i);
 
 #endif // GAME_PIECE_H

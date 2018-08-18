@@ -40,6 +40,6 @@ obj/game/%.o: $(SRC_PATH)game/%.c
 	    $(CC) $(CFLAGS) $(INCLG) -o $@ $<
 
 
-.PHONY : clean
-clean :
+.PHONY: clean
+clean:
 	    -rm output tests/* && find obj/ -type f -delete

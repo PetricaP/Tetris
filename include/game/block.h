@@ -19,3 +19,4 @@ Block create_block(SDL_Texture *texture, BlockColor color, int x, int y,
 void draw_block(const Block *block);
 
 #endif // GAME_BLOCK_H
+
