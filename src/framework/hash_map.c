@@ -30,4 +30,3 @@ TTF_Font *get(Node_T *map[], const char *key) {
     }
     return node->data;
 }
-

@@ -57,9 +57,8 @@ void print_text(const char *message, SDL_Color color, vec2i position,
     SDL_DestroyTexture(textTexture);
 }
 
-void draw_text_texture(SDL_Texture *texture, const char *message, vec2i position,
+void draw_text_texture(SDL_Texture *texture, int numLetters, vec2i position,
                        int letterWidth, int letterHeight) {
-    int numLetters = strlen(message);
     int width = letterWidth * numLetters;
     int offset_x = width / 2;
     int offset_y = letterHeight / 2;

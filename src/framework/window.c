@@ -7,17 +7,19 @@ static unsigned int m_ScreenWidth;
 static unsigned int m_ScreenHeight;
 static SDL_Color m_ClearColor;
 
-Window create_window(const char *name, unsigned int width, unsigned int height) {
+Window create_window(const char *name, unsigned int width,
+                     unsigned int height) {
     Window window;
     m_ScreenWidth = width;
     m_ScreenHeight = height;
-    window.m_SDLWindow = SDL_CreateWindow(name, 900, SDL_WINDOWPOS_CENTERED,
-            width, height, 0);
+    window.m_SDLWindow =
+        SDL_CreateWindow(name, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, 0);
     if (window.m_SDLWindow == NULL) {
         fprintf(stderr, "Could not create window: %s\n", SDL_GetError());
         exit(1);
     }
-    m_Renderer = SDL_CreateRenderer(window.m_SDLWindow, -1, SDL_RENDERER_ACCELERATED);
+    m_Renderer =
+        SDL_CreateRenderer(window.m_SDLWindow, -1, SDL_RENDERER_ACCELERATED);
     if (m_Renderer == NULL) {
         fprintf(stderr, "Could not create renderer: %s\n", SDL_GetError());
         exit(1);
@@ -45,12 +47,10 @@ void delete_window(Window *window) {
     m_Renderer = NULL;
 }
 
-SDL_Color get_clear_color(void) {
-    return m_ClearColor;
-}
+SDL_Color get_clear_color(void) { return m_ClearColor; }
 
-void set_window_clear_color(unsigned char r, 
-        unsigned char g, unsigned char b, unsigned char a) {
+void set_window_clear_color(unsigned char r, unsigned char g, unsigned char b,
+                            unsigned char a) {
     m_ClearColor.r = r;
     m_ClearColor.g = g;
     m_ClearColor.b = b;
@@ -59,10 +59,6 @@ void set_window_clear_color(unsigned char r,
     SDL_SetRenderDrawBlendMode(m_Renderer, SDL_BLENDMODE_BLEND);
 }
 
-unsigned int get_screen_width(void) {
-    return m_ScreenWidth;
-}
+unsigned int get_screen_width(void) { return m_ScreenWidth; }
 
-unsigned int get_screen_height(void) {
-    return m_ScreenHeight;
-}
+unsigned int get_screen_height(void) { return m_ScreenHeight; }

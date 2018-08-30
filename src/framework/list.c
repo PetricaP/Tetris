@@ -10,7 +10,7 @@ static Node *create_node(Particle data) {
 }
 
 void insert_node(Node **head, Particle data) {
-    if(*head == NULL) {
+    if (*head == NULL) {
         *head = create_node(data);
     } else {
         Node *node = create_node(data);
@@ -37,7 +37,7 @@ static Node_T *create_node_t(const char *key, TTF_Font *data) {
 }
 
 void insert_node_t(Node_T **head, const char *key, TTF_Font *data) {
-    if(*head == NULL) {
+    if (*head == NULL) {
         *head = create_node_t(key, data);
     } else {
         Node_T *node = create_node_t(key, data);
@@ -51,4 +51,3 @@ void remove_next_node(Node *nodePtr) {
     nodePtr->next = temp->next;
     free(temp);
 }
-

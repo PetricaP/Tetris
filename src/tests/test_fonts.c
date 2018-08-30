@@ -1,3 +1,4 @@
+#include "framework/time.h"
 #include "game/game.h"
 #include <framework/font_manager.h>
 #include <framework/window.h>

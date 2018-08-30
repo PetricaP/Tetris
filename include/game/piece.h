@@ -22,7 +22,7 @@ typedef struct {
 Piece create_piece(PieceType type, int x, int y, unsigned int blockWidth,
         BlockColor color);
 void draw_piece(const Piece *piece);
-void update_piece(Piece *piece, Piece *nextPiece);
+void update_piece(Piece *piece, Piece *nextPiece, float deltaTime);
 
 bool is_colliding_piece_blocks_left(const Block *block);
 bool is_colliding_piece_blocks_right(const Block *block);
