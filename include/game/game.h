@@ -4,7 +4,6 @@
 #include "piece.h"
 
 typedef enum { PLAY = 0, PAUSE = 1, EXIT = 2, END = 3 } GameState;
-
 void init_graphics(void);
 void init_game(unsigned int blockWidth, GameState *gameState);
 void close_game();
@@ -20,8 +19,8 @@ unsigned int get_rows(void);
 void add_piece(Piece *piece);
 void add_block(Block *block);
 unsigned int get_grid_width(void);
-void set_grid_clear_color(unsigned char r, 
-        unsigned char g, unsigned char b, unsigned char a);
+void set_grid_clear_color(unsigned char r, unsigned char g, unsigned char b,
+                          unsigned char a);
 void draw_grid(void);
 void draw_blocks(void);
 void draw_particles(void);
@@ -31,4 +30,3 @@ void update_particles(float deltaTime);
 void draw_score(void);
 
 #endif // GAME_GAME_H
-
