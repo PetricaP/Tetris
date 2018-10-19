@@ -14,7 +14,6 @@
 
 * Making the UI prettier.
 
-
 ###    ISSUES    ###
 
-1. Only consecutive rows are destroyed.
+1. End screen particles don't move.
