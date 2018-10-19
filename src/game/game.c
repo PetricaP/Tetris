@@ -45,8 +45,8 @@ static unsigned int m_GridWidth = 0;
 static GameState *m_GameState;
 static vec2i m_EndScreenPosition = {0, 0};
 
-SDL_Texture *m_ScoreTexture = NULL;
-SDL_Texture *m_ScoreTextTexture = NULL;
+static SDL_Texture *m_ScoreTexture = NULL;
+static SDL_Texture *m_ScoreTextTexture = NULL;
 
 const Block *get_grid_block(unsigned int i, unsigned int j) {
     return m_Blocks + i * m_Cols + j;
