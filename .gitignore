@@ -1,0 +1,7 @@
+obj/
+tests/*
+output
+GTAGS
+GRTAGS
+GPATH
+compile_commands.json
