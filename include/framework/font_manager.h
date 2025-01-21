@@ -5,7 +5,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 
-void init_fonts();
+void init_fonts(void);
 void set_font(const char *filePath);
 TTF_Font *get_font(const char *filePath);
 void print_text(const char *message, SDL_Color color, vec2i position,

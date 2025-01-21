@@ -1,45 +1,40 @@
-SRC_PATH=src/
-CC=gcc
-WN=-Werror -Wall -Wextra --pedantic -g
-CFLAGS=-c ${WN}
+# Variables
+SRC_PATH = src/
+CC = gcc
+WN = -Werror -Wall -Wextra --pedantic -g -std=c11
+CFLAGS = -c ${WN} 
+INCL = -Iinclude/ -Iinclude/framework/ -Iinclude/game/ -Iinclude/tests/ -I/opt/homebrew/include
+FLAGS = -lSDL2 -lSDL2_ttf -lSDL2_image -lm -L/opt/homebrew/lib
+EXE = output
 
-INCL=-Iinclude/
-INCLF=${INCL} -Iinclude/framework/
-INCLG=${INCL} -Iinclude/game/
-INCLT=${INCL} -Iinclude/tests
-FLAGS=-lSDL2 -lSDL2_ttf -lSDL2_image -lm
-EXE=output
+# Source files
+SRC = $(wildcard $(SRC_PATH)framework/*.c $(SRC_PATH)game/*.c)
+OBJ = $(subst src, obj, $(SRC:.c=.o))
+TESTSRC = $(wildcard $(SRC_PATH)tests/*.c)
+TESTS = $(patsubst src/tests/test_%.c, tests/%, $(TESTSRC))
 
-SRC=$(wildcard $(SRC_PATH)framework/*.c $(SRC_PATH)game/*.c)
-OBJ=$(subst src, obj, $(SRC:.c=.o))
-TESTSRC=$(wildcard $(SRC_PATH)tests/*.c)
-TESTS=$(subst src/, , $(TESTSRC:.c= ))
-TESTSP=$(subst test_, tests/, $(TESTS))
+# Default rule
+all: setup $(EXE) $(TESTS)
 
-all: $(EXE) $(TESTSP)
+# Create required directories
+setup:
+	mkdir -p obj/framework obj/game obj/tests tests
 
-tests/%: obj/tests/test_%.o $(OBJ)
-	    $(CC) -o $@ $^ $(FLAGS) $(WN)
-
+# Build the main executable
 $(EXE): $(OBJ) obj/main.o
-	    $(CC) -o $@ $^ $(FLAGS) $(WN)
+	$(CC) -o $@ $^ $(FLAGS) $(WN)
 
-obj/main.o: $(SRC_PATH)main.c
-	    $(CC) $(CFLAGS) $(INCL) -o $@ $<
+# Rule for tests
+tests/%: obj/tests/test_%.o $(OBJ)
+	$(CC) -o $@ $^ $(FLAGS) $(WN)
 
-obj/%.o: $(SRC_PATH)%.c
-	    $(CC) $(CFLAGS) $(INCL) -o $@ $<
+# Compile source files
+obj/%.o: src/%.c
+	$(CC) $(CFLAGS) $(INCL) -o $@ $<
 
-obj/tests/%.o: $(SRC_PATH)tests/%.c
-	    $(CC) $(CFLAGS) $(INCLT) -o $@ $<
-
-obj/framework/%.o: $(SRC_PATH)framework/%.c
-	    $(CC) $(CFLAGS) $(INCLF) -o $@ $<
-
-obj/game/%.o: $(SRC_PATH)game/%.c
-	    $(CC) $(CFLAGS) $(INCLG) -o $@ $<
-
-
-.PHONY: clean
+# Clean rule
 clean:
-	    -rm output tests/* && find obj/ -type f -delete
+	rm -rf obj $(EXE) tests/*
+
+# PHONY targets
+.PHONY: all clean setup

@@ -1,10 +1,10 @@
-#include "framework/time.h"
+#include "framework/framework_time.h"
 #include "game/game.h"
 #include <framework/font_manager.h>
 #include <framework/window.h>
 
 
-int main() {
+int main(void) {
     init_fonts();
     init_graphics();
     Window m_Window = create_window("FontRenderTest", 810, 600);
@@ -15,7 +15,7 @@ int main() {
     GameState gameState = PAUSE;
     init_game(30, &gameState);
     while(gameState != EXIT) {
-        process_input(&gameState);
+        process_input();
         print_text("Hello Tetris", color, position, 20, 30);
         cap_fps(20);
         clear_window();

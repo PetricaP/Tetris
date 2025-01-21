@@ -6,9 +6,9 @@
 typedef enum { PLAY = 0, PAUSE = 1, EXIT = 2, END = 3 } GameState;
 void init_graphics(void);
 void init_game(unsigned int blockWidth, GameState *gameState);
-void close_game();
-void process_input();
-void draw_game();
+void close_game(void);
+void process_input(void);
+void draw_game(void);
 void update_game(float deltaTime);
 void update_blocks(float deltaTime);
 unsigned int get_screen_width(void);

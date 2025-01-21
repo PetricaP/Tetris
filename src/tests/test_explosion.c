@@ -1,4 +1,4 @@
-#include "framework/time.h"
+#include "framework/framework_time.h"
 #include "game/game.h"
 #include "game/piece_factory.h"
 #include <SDL2/SDL_image.h>
@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
     while (gameState != EXIT) {
         float deltaTime = ticks - prevTicks;
         prevTicks = ticks;
-        process_input(&gameState);
+        process_input();
         if (gameState != PAUSE) {
             update_test(deltaTime);
         }

@@ -2,7 +2,7 @@
 #include "framework/input_manager.h"
 #include "framework/list.h"
 #include "framework/particle.h"
-#include "framework/time.h"
+#include "framework/framework_time.h"
 #include "framework/window.h"
 #include "game.h"
 #include "piece_factory.h"
@@ -76,7 +76,7 @@ static void show_particle_shower(vec2i position) {
     }
 }
 
-static void show_end_screen() {
+static void show_end_screen(void) {
     static SDL_Texture *endTextTexture = NULL;
     static char message[] = "GAME OVER";
     static char numLetters = sizeof(message) / sizeof(char) - 1;
@@ -93,7 +93,7 @@ static void show_end_screen() {
                       letterWidth, letterHeight);
 }
 
-static void update_score() {
+static void update_score(void) {
     char scoreString[12];
     sprintf(scoreString, "%d", m_Score);
     SDL_Color scoreColor = {200, 200, 200, 200};
@@ -197,7 +197,7 @@ void create_initial_pieces(void) {
         create_piece(random() % PIECE_TYPES, x, y, m_BlockWidth, random() % 4);
 }
 
-void process_input() {
+void process_input(void) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
         switch (event.type) {
@@ -227,7 +227,7 @@ void process_input() {
     }
 }
 
-void draw_grid() {
+void draw_grid(void) {
     unsigned int step = m_BlockWidth;
     SDL_Color backgroundColor = get_clear_color();
     SDL_SetRenderDrawColor(get_renderer(), m_GridColor.r, m_GridColor.g,
@@ -265,7 +265,7 @@ void draw_particles(void) {
 static void show_boom(void);
 static bool m_Boom = false;
 
-void draw_game() {
+void draw_game(void) {
     draw_grid();
     draw_piece(&m_ActivePiece);
     draw_piece(&m_NextPiece);

@@ -1,4 +1,4 @@
-#include "framework/time.h"
+#include "framework/framework_time.h"
 #include "framework/window.h"
 #include "game/game.h"
 #include <SDL2/SDL.h>
@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-int main() {
+int main(void) {
     const unsigned int screenWidth = 660;
     const unsigned int screenHeight = 810;
     const unsigned int blockWidth = 30;
@@ -22,7 +22,7 @@ int main() {
     while (gameState != EXIT) {
         float deltaTime = ticks - prevTicks;
         prevTicks = ticks;
-        process_input(&gameState);
+        process_input();
         if (gameState == PLAY) {
             update_game(deltaTime);
         }

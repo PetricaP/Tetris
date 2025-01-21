@@ -23,7 +23,7 @@ void set_font(const char *filePath) {
 
 TTF_Font *get_font(const char *filePath) { return get(m_Fonts, filePath); }
 
-void init_fonts() { TTF_Init(); }
+void init_fonts(void) { TTF_Init(); }
 
 SDL_Texture *generate_text_texture(const char *message, SDL_Color color) {
     SDL_Surface *textSurface =
